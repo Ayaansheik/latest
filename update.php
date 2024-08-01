@@ -8,13 +8,13 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Fetch user data
-$fetch_query = "SELECT * FROM `register` where user_id = :user_id";
+$fetch_query = "SELECT * FROM `register` WHERE user_id = :user_id";
 $fetch_prepare = $connection->prepare($fetch_query);
 $fetch_prepare->bindParam(":user_id", $_SESSION['user_id']);
 $fetch_prepare->execute();
 $fetch_data = $fetch_prepare->fetch(PDO::FETCH_ASSOC);
-// 
-$fetch_upt_query = "SELECT * FROM `brand_profile` where user_id = :user_id";
+
+$fetch_upt_query = "SELECT * FROM `brand_profile` WHERE user_id = :user_id";
 $fetch_upt_prepare = $connection->prepare($fetch_upt_query);
 $fetch_upt_prepare->bindParam(":user_id", $_SESSION['user_id']);
 $fetch_upt_prepare->execute();
@@ -40,17 +40,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Handle background image upload
         $bgimagename = $_FILES['background_img']['name'];
         $bgimagetmpname = $_FILES['background_img']['tmp_name'];
-        move_uploaded_file($bgimagetmpname, "uploads/" . $bgimagename);
+        if (!empty($bgimagename)) {
+            move_uploaded_file($bgimagetmpname, "uploads/" . $bgimagename);
+        } else {
+            $bgimagename = $fetch_data['bg_img']; // Keep the old image if no new image is uploaded
+        }
 
         // Handle profile image upload
         $imagename = $_FILES['profile_img']['name'];
         $imagetmpname = $_FILES['profile_img']['tmp_name'];
-        move_uploaded_file($imagetmpname, "uploads/" . $imagename);
-        $user_id = $_SESSION['user_id'];
+        if (!empty($imagename)) {
+            move_uploaded_file($imagetmpname, "uploads/" . $imagename);
+        } else {
+            $imagename = $fetch_data['profile_img']; // Keep the old image if no new image is uploaded
+        }
 
         try {
-            $sql = "INSERT INTO `create-creator-profile` (first_name, last_name, city, gender, marital_status, age, country, category, description, fb_url, insta_url, youtube_url, twitter_url, bg_img, profile_img, user_id)
-                    VALUES (:first_name, :last_name, :city, :gender, :marital_status, :age, :country, :category, :description, :fb_url, :insta_url, :youtube_url, :twitter_url, :bg_img, :profile_img, :user_id)";
+            $sql = "UPDATE `create-creator-profile` 
+                    SET first_name = :first_name, 
+                        last_name = :last_name, 
+                        city = :city, 
+                        gender = :gender, 
+                        marital_status = :marital_status, 
+                        age = :age, 
+                        country = :country, 
+                        category = :category, 
+                        description = :description, 
+                        fb_url = :fb_url, 
+                        insta_url = :insta_url, 
+                        youtube_url = :youtube_url, 
+                        twitter_url = :twitter_url, 
+                        bg_img = :bg_img, 
+                        profile_img = :profile_img 
+                    WHERE user_id = :user_id";
             $stmt = $connection->prepare($sql);
             $stmt->bindParam(':first_name', $first_name);
             $stmt->bindParam(':last_name', $last_name);
@@ -67,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bindParam(':twitter_url', $twitter_url);
             $stmt->bindParam(':bg_img', $bgimagename);
             $stmt->bindParam(':profile_img', $imagename);
-            $stmt->bindParam(':user_id', $user_id);
+            $stmt->bindParam(':user_id', $_SESSION['user_id']);
             $stmt->execute();
             header("Location: profile.php");
         } catch (PDOException $e) {
@@ -88,22 +110,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $insta_url = $_POST['insta_url'];
         $youtube_url = $_POST['youtube_url'];
         $website_url = $_POST['website_url'];
-        $user_id = $_SESSION['user_id'];
-
 
         // Handle background image upload
         $bgimagename = $_FILES['bg_img']['name'];
         $bgimagetmpname = $_FILES['bg_img']['tmp_name'];
-        move_uploaded_file($bgimagetmpname, "uploads/" . $bgimagename);
+        if (!empty($bgimagename)) {
+            move_uploaded_file($bgimagetmpname, "uploads/" . $bgimagename);
+        } else {
+            $bgimagename = $fetch_upr_data['bg_img']; // Keep the old image if no new image is uploaded
+        }
 
         // Handle logo image upload
         $logoimagename = $_FILES['logo_img']['name'];
         $logoimagetmpname = $_FILES['logo_img']['tmp_name'];
-        move_uploaded_file($logoimagetmpname, "uploads/" . $logoimagename);
+        if (!empty($logoimagename)) {
+            move_uploaded_file($logoimagetmpname, "uploads/" . $logoimagename);
+        } else {
+            $logoimagename = $fetch_upr_data['logo_img']; // Keep the old image if no new image is uploaded
+        }
 
         try {
-            $sql = "INSERT INTO `brand_profile` (brand_name, category, register_date, location, user_name, user_email, user_phone, gender, brand_descr, fb_url, insta_url, youtube_url, website_url, bg_img, logo_img,user_id)
-                    VALUES (:brand_name, :category, :register_date, :location, :user_name, :user_email, :user_phone, :gender, :brand_descr, :fb_url, :insta_url, :youtube_url, :website_url, :bg_img, :logo_img, :user_id)";
+            $sql = "UPDATE `brand_profile` 
+                    SET brand_name = :brand_name, 
+                        category = :category, 
+                        register_date = :register_date, 
+                        location = :location, 
+                        user_name = :user_name, 
+                        user_email = :user_email, 
+                        user_phone = :user_phone, 
+                        gender = :gender, 
+                        brand_descr = :brand_descr, 
+                        fb_url = :fb_url, 
+                        insta_url = :insta_url, 
+                        youtube_url = :youtube_url, 
+                        website_url = :website_url, 
+                        bg_img = :bg_img, 
+                        logo_img = :logo_img 
+                    WHERE user_id = :user_id";
             $stmt = $connection->prepare($sql);
             $stmt->bindParam(':brand_name', $brand_name);
             $stmt->bindParam(':category', $category);
@@ -120,19 +163,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bindParam(':website_url', $website_url);
             $stmt->bindParam(':bg_img', $bgimagename);
             $stmt->bindParam(':logo_img', $logoimagename);
-            $stmt->bindParam(':user_id', $user_id);
+            $stmt->bindParam(':user_id', $_SESSION['user_id']);
             $stmt->execute();
             header("Location: brand-profile.php");
         } catch (PDOException $e) {
             echo "Error: " . $e->getMessage();
         }
     }
-
-    $connection = null;
 }
 ?>
-
-
 
 <div class="right-sidebar-panel p-0">
     <div class="card shadow-none">
@@ -253,7 +292,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                                 <div class="card-body">
                                     <?php if ($fetch_data['user_type'] == 'brand') { ?>
-                                        <form action="update-profile.php" method="POST" enctype="multipart/form-data">
+                                        <form action="update.php" method="POST" enctype="multipart/form-data">
                                             <input type="hidden" name="form_type" value="brand">
                                             <!-- Brand form fields -->
                                             <div class="form-group row align-items-center">
@@ -275,7 +314,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             <div class="row align-items-center">
                                                 <div class="form-group col-sm-6">
                                                     <label for="brand_name" class="form-label">Brand Name:</label>
-                                                    <input type="text" class="form-control" id="brand_name"  name="brand_name" pattern="[A-Za-z\s]+" title="Only letters and spaces are allowed" value="<?php echo ($fetch_upr_data['brand_name'] ?? ''); ?>" required>
+                                                    <input type="text" class="form-control" id="brand_name" name="brand_name" pattern="[A-Za-z\s]+" title="Only letters and spaces are allowed" value="<?php echo ($fetch_upr_data['brand_name'] ?? ''); ?>" required>
                                                 </div>
                                                 <div class="form-group col-sm-6">
                                                     <label class="form-label">Category:</label>
