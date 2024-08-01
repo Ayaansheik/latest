@@ -20,6 +20,13 @@ $fetch_upt_prepare->bindParam(":user_id", $_SESSION['user_id']);
 $fetch_upt_prepare->execute();
 $fetch_upr_data = $fetch_upt_prepare->fetch(PDO::FETCH_ASSOC);
 
+
+$fetch_creator_query = "SELECT * FROM `create-creator-profile` WHERE user_id = :user_id";
+$fetch_creator_prepare = $connection->prepare($fetch_creator_query);
+$fetch_creator_prepare->bindParam(":user_id", $_SESSION['user_id']);
+$fetch_creator_prepare->execute();
+$fetch_creator_profile_data = $fetch_creator_prepare->fetch(PDO::FETCH_ASSOC);
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['form_type']) && $_POST['form_type'] == 'influencer') {
         // Influencer form data
@@ -91,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bindParam(':profile_img', $imagename);
             $stmt->bindParam(':user_id', $_SESSION['user_id']);
             $stmt->execute();
-            header("Location: profile.php");
+            // header("Location: profile.php");
         } catch (PDOException $e) {
             echo "Error: " . $e->getMessage();
         }
@@ -165,7 +172,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bindParam(':logo_img', $logoimagename);
             $stmt->bindParam(':user_id', $_SESSION['user_id']);
             $stmt->execute();
-            header("Location: brand-profile.php");
+            // header("Location: brand-profile.php");
         } catch (PDOException $e) {
             echo "Error: " . $e->getMessage();
         }
@@ -291,21 +298,129 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                 </div>
                                 <div class="card-body">
-                                    <?php if ($fetch_data['user_type'] == 'brand') { ?>
+                                    <?php if ($fetch_data['user_type'] == 'influencer') { ?>
+                                        <form action="update.php" method="POST" enctype="multipart/form-data">
+                                            <input type="hidden" name="form_type" value="influencer">
+
+                                            <!-- Influencer form fields -->
+                                            <div class="form-group row align-items-center">
+                                                <div class="form-group col-sm-6">
+                                                    <label for="background_img" class="form-label">Background Image</label>
+                                                    <input type="file" class="form-control" id="background_img" name="background_img" required>
+                                                    <?php if (!empty($fetch_creator_profile_data['bg_img'])) : ?>
+                                                        <img src="uploads/<?php echo htmlspecialchars($fetch_creator_profile_data['bg_img']); ?>" alt="Background Image" width="100">
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label for="profile_img" class="form-label">Profile Image</label>
+                                                    <input type="file" class="form-control" id="profile_img" name="profile_img"required>
+                                                    <?php if (!empty($fetch_creator_profile_data['profile_img'])) : ?>
+                                                        <img src="uploads/<?php echo htmlspecialchars($fetch_creator_profile_data['profile_img']); ?>" alt="Profile Image" width="100">
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                            <div class="row align-items-center">
+                                                <div class="form-group col-sm-6">
+                                                    <label for="first_name" class="form-label">First Name:</label>
+                                                    <input type="text" class="form-control" id="first_name" name="first_name" pattern="[A-Za-z\s]+" title="Only letters and spaces are allowed" value="<?php echo htmlspecialchars($fetch_creator_profile_data['first_name']); ?>" required>
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label for="last_name" class="form-label">Last Name:</label>
+                                                    <input type="text" class="form-control" id="last_name" name="last_name" pattern="[A-Za-z\s]+" title="Only letters and spaces are allowed" value="<?php echo htmlspecialchars($fetch_creator_profile_data['last_name']); ?>" required>
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label for="city" class="form-label">City:</label>
+                                                    <input type="text" class="form-control" id="city" name="city" pattern="[A-Za-z\s]+" title="Only letters and spaces are allowed" value="<?php echo htmlspecialchars($fetch_creator_profile_data['city']); ?>" required>
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label class="form-label d-block">Gender:</label>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="gender" value="Male" id="inlineRadio10" <?php echo ($fetch_creator_profile_data['gender'] == 'Male') ? 'checked' : ''; ?> required>
+                                                        <label class="form-check-label" for="inlineRadio10">Male</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="gender" value="Female" id="inlineRadio11" <?php echo ($fetch_creator_profile_data['gender'] == 'Female') ? 'checked' : ''; ?> required>
+                                                        <label class="form-check-label" for="inlineRadio11">Female</label>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label class="form-label">Marital Status:</label>
+                                                    <select class="form-select" name="marital_status" required>
+                                                        <option value="Single" <?php echo ($fetch_creator_profile_data['marital_status'] == 'Single') ? 'selected' : ''; ?>>Single</option>
+                                                        <option value="Married" <?php echo ($fetch_creator_profile_data['marital_status'] == 'Married') ? 'selected' : ''; ?>>Married</option>
+                                                        <option value="Widowed" <?php echo ($fetch_creator_profile_data['marital_status'] == 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
+                                                        <option value="Divorced" <?php echo ($fetch_creator_profile_data['marital_status'] == 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
+                                                        <option value="Separated" <?php echo ($fetch_creator_profile_data['marital_status'] == 'Separated') ? 'selected' : ''; ?>>Separated</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label class="form-label">Age:</label>
+                                                    <select class="form-select" name="age" required>
+                                                        <option value="18-25" <?php echo ($fetch_creator_profile_data['age'] == '18-25') ? 'selected' : ''; ?>>18-25</option>
+                                                        <option value="26-35" <?php echo ($fetch_creator_profile_data['age'] == '26-35') ? 'selected' : ''; ?>>26-35</option>
+                                                        <option value="36-45" <?php echo ($fetch_creator_profile_data['age'] == '36-45') ? 'selected' : ''; ?>>36-45</option>
+                                                        <option value="46-62" <?php echo ($fetch_creator_profile_data['age'] == '46-62') ? 'selected' : ''; ?>>46-62</option>
+                                                        <option value="63+" <?php echo ($fetch_creator_profile_data['age'] == '63+') ? 'selected' : ''; ?>>63+</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label class="form-label">Country:</label>
+                                                    <select class="form-select" name="country" required>
+                                                        <option value="Canada" <?php echo ($fetch_creator_profile_data['country'] == 'Canada') ? 'selected' : ''; ?>>Canada</option>
+                                                        <option value="USA" <?php echo ($fetch_creator_profile_data['country'] == 'USA') ? 'selected' : ''; ?>>USA</option>
+                                                        <option value="India" <?php echo ($fetch_creator_profile_data['country'] == 'India') ? 'selected' : ''; ?>>India</option>
+                                                        <option value="UK" <?php echo ($fetch_creator_profile_data['country'] == 'UK') ? 'selected' : ''; ?>>UK</option>
+                                                        <option value="Australia" <?php echo ($fetch_creator_profile_data['country'] == 'Australia') ? 'selected' : ''; ?>>Australia</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label class="form-label">Category:</label>
+                                                    <select class="form-select" name="category" required>
+                                                        <option value="YouTuber" <?php echo ($fetch_creator_profile_data['category'] == 'YouTuber') ? 'selected' : ''; ?>>YouTuber</option>
+                                                        <option value="Dancer" <?php echo ($fetch_creator_profile_data['category'] == 'Dancer') ? 'selected' : ''; ?>>Dancer</option>
+                                                        <option value="Actress" <?php echo ($fetch_creator_profile_data['category'] == 'Actress') ? 'selected' : ''; ?>>Actress</option>
+                                                        <option value="Influencer" <?php echo ($fetch_creator_profile_data['category'] == 'Influencer') ? 'selected' : ''; ?>>Influencer</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group col-sm-12">
+                                                    <label class="form-label">Detail Description:</label>
+                                                    <textarea class="form-control" name="description" rows="5" required><?php echo htmlspecialchars($fetch_creator_profile_data['description']); ?></textarea>
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label for="fb_url" class="form-label">Facebook URL:</label>
+                                                    <input type="url" class="form-control" id="fb_url" name="fb_url" value="<?php echo htmlspecialchars($fetch_creator_profile_data['fb_url']); ?>">
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label for="insta_url" class="form-label">Instagram URL:</label>
+                                                    <input type="url" class="form-control" id="insta_url" name="insta_url" value="<?php echo htmlspecialchars($fetch_creator_profile_data['insta_url']); ?>">
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label for="youtube_url" class="form-label">YouTube URL:</label>
+                                                    <input type="url" class="form-control" id="youtube_url" name="youtube_url" value="<?php echo htmlspecialchars($fetch_creator_profile_data['youtube_url']); ?>">
+                                                </div>
+                                                <div class="form-group col-sm-6">
+                                                    <label for="twitter_url" class="form-label">Twitter URL:</label>
+                                                    <input type="url" class="form-control" id="twitter_url" name="twitter_url" value="<?php echo htmlspecialchars($fetch_creator_profile_data['twitter_url']); ?>">
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary me-2">Submit</button>
+                                            <button type="reset" class="btn bg-soft-danger">Cancel</button>
+                                        </form>
+                                    <?php } elseif ($fetch_data['user_type'] == 'brand') { ?>
                                         <form action="update.php" method="POST" enctype="multipart/form-data">
                                             <input type="hidden" name="form_type" value="brand">
                                             <!-- Brand form fields -->
                                             <div class="form-group row align-items-center">
                                                 <div class="form-group col-sm-6">
                                                     <label for="bg_img" class="form-label">Background Image</label>
-                                                    <input type="file" class="form-control" id="bg_img" name="bg_img">
+                                                    <input type="file" class="form-control" id="bg_img" name="bg_img" required>
                                                     <?php if (!empty($fetch_data['bg_img'])) { ?>
                                                         <img src="<?php echo ($fetch_upr_data['bg_img']); ?>" alt="Background Image" class="img-thumbnail mt-2" style="max-width: 100px;">
                                                     <?php } ?>
                                                 </div>
                                                 <div class="form-group col-sm-6">
                                                     <label for="logo_img" class="form-label">Logo Image</label>
-                                                    <input type="file" class="form-control" id="logo_img" name="logo_img">
+                                                    <input type="file" class="form-control" id="logo_img" name="logo_img" required>
                                                     <?php if (!empty($fetch_data['logo_img'])) { ?>
                                                         <img src="<?php echo ($fetch_upr_data['logo_img']); ?>" alt="Logo Image" class="img-thumbnail mt-2" style="max-width: 100px;">
                                                     <?php } ?>
